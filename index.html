@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>🎰Slot Casino</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --text: #111111;
+      --muted: #6e6e6e;
+      --line: rgba(17, 17, 17, 0.08);
+      --glass: rgba(255, 255, 255, 0.54);
+      --glass-strong: rgba(255, 255, 255, 0.74);
+      --shadow: 0 24px 56px rgba(17, 17, 17, 0.12);
+      --soft-shadow: 0 14px 30px rgba(17, 17, 17, 0.08);
+      --symbols-image: url("./assets/symbols.png");
+      --payline-top: 50%;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI Variable Display", "Bahnschrift", "Trebuchet MS", sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      min-height: 100svh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding:
+        max(12px, env(safe-area-inset-top, 0))
+        12px
+        max(12px, env(safe-area-inset-bottom, 0));
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    .app {
+      position: relative;
+      width: min(calc(100vw - 24px), calc((100svh - 24px) * 9 / 16), 430px);
+      height: min(calc(100svh - 24px), calc((100vw - 24px) * 16 / 9));
+      max-width: 430px;
+      max-height: calc(100svh - 24px);
+      min-width: 0;
+      min-height: 0;
+      aspect-ratio: 9 / 16;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "topbar"
+        "meta"
+        "machine"
+        "controls";
+      grid-template-rows: auto auto 1fr auto;
+      gap: 10px;
+      padding: 16px 14px 18px;
+      overflow: hidden;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 15% 14%, rgba(255, 255, 255, 0.85), transparent 22%),
+        radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.62), transparent 24%),
+        linear-gradient(180deg, #fafafa, #f1f1f1 58%, #f6f6f6);
+    }
+
+    .glass {
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: linear-gradient(180deg, var(--glass-strong), var(--glass));
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(20px) saturate(1.03);
+      -webkit-backdrop-filter: blur(20px) saturate(1.03);
+      overflow: hidden;
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 48%),
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.6), transparent 26%);
+      pointer-events: none;
+    }
+
+    .topbar,
+    .meta-line,
+    .control-panel,
+    .overlay-card {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+    }
+
+    .topbar {
+      grid-area: topbar;
+    }
+
+    .meta-line {
+      grid-area: meta;
+    }
+
+    .machine-zone {
+      grid-area: machine;
+    }
+
+    .control-panel {
+      grid-area: controls;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-card {
+      border-radius: 24px;
+      padding: 9px 11px;
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .label,
+    .tiny {
+      position: relative;
+      z-index: 1;
+      font-size: 0.64rem;
+      line-height: 1.2;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .value {
+      position: relative;
+      z-index: 1;
+      font-size: 1.14rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+    }
+
+    .mini-subvalue {
+      position: relative;
+      z-index: 1;
+      font-size: 0.68rem;
+      line-height: 1.2;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .mini-card:last-child {
+      text-align: right;
+    }
+
+    .meta-line {
+      border-radius: 24px;
+      padding: 12px 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .meta-copy {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.8rem;
+      line-height: 1.35;
+      color: var(--muted);
+      min-width: 0;
+    }
+
+    .meta-copy strong {
+      color: var(--text);
+      font-size: 1.02rem;
+      font-weight: 900;
+    }
+
+    .progress-rail,
+    .time-rail {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.08);
+    }
+
+    .progress-rail {
+      height: 12px;
+    }
+
+    .time-rail {
+      height: 5px;
+    }
+
+    .progress-fill,
+    .time-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      transition: width 220ms ease;
+      background: linear-gradient(90deg, rgba(17, 17, 17, 0.96), rgba(120, 120, 120, 0.94));
+    }
+
+    .machine-zone {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .machine {
+      position: relative;
+      width: min(92%, 360px);
+      max-height: 100%;
+      display: grid;
+      place-items: center;
+      transform-origin: center bottom;
+    }
+
+    .machine-shadow {
+      position: absolute;
+      left: 9%;
+      right: 9%;
+      bottom: 1.5%;
+      height: 9%;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(17, 17, 17, 0.24), rgba(17, 17, 17, 0.04) 70%, transparent 76%);
+      filter: blur(16px);
+      transform: translateY(18px);
+    }
+
+    .machine-shell {
+      position: relative;
+      width: 100%;
+      padding: 20px 16px 16px;
+      border-radius: 38px;
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.46)),
+        linear-gradient(180deg, rgba(220, 220, 220, 0.08), rgba(0, 0, 0, 0.04));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+        var(--shadow);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      overflow: hidden;
+      display: grid;
+      align-content: center;
+    }
+
+    .machine-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.84), transparent 36%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 52%, rgba(17, 17, 17, 0.04));
+      pointer-events: none;
+    }
+
+    .machine-shell::after {
+      content: "";
+      position: absolute;
+      top: -12%;
+      bottom: -12%;
+      width: 20%;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0));
+      transform: translateX(-150%) rotate(14deg);
+      animation: shell-glint 5.2s linear infinite;
+      pointer-events: none;
+    }
+
+    .machine-window {
+      position: relative;
+      border-radius: 30px;
+      padding: 14px;
+      width: 100%;
+    }
+
+    .machine-window::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.74), transparent 18%, transparent 82%, rgba(17, 17, 17, 0.08)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.48), transparent 10%, transparent 90%, rgba(255, 255, 255, 0.28));
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .payline {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: var(--payline-top);
+      height: 4px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(17, 17, 17, 0.94), rgba(255, 255, 255, 0));
+      opacity: 0.16;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .reels {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .reel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      aspect-ratio: 1 / 1.16;
+      contain: layout paint;
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.62) 50%, rgba(255, 255, 255, 0.82)),
+        rgba(255, 255, 255, 0.74);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -10px 16px rgba(17, 17, 17, 0.05);
+    }
+
+    .reel-track {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      transform: translate3d(0, 0, 0);
+      will-change: auto;
+      backface-visibility: hidden;
+    }
+
+    .symbol-cell {
+      flex: 0 0 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 12%;
+    }
+
+    .symbol-frame {
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      transform: scale(var(--symbol-scale, 1));
+      transform-origin: center;
+    }
+
+    .symbol-art {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      background-image: var(--symbols-image);
+      background-repeat: no-repeat;
+      background-size: 300% 300%;
+      filter: saturate(1.04) contrast(1.04);
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+
+    .machine.is-winning .symbol-art {
+      transform: scale(1.03);
+    }
+
+    .machine-foot {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .foot-line {
+      width: 46%;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(17, 17, 17, 0.72), rgba(17, 17, 17, 0.28));
+      opacity: 0.12;
+    }
+
+    .burst {
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      transform: translate(-50%, -50%) scale(0.8);
+      z-index: 8;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.54));
+      box-shadow: var(--soft-shadow);
+      font-size: 0.96rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      opacity: 0;
+      pointer-events: none;
+      backdrop-filter: blur(18px);
+    }
+
+    .burst.is-visible {
+      animation: burst-pop 980ms ease;
+    }
+
+    .control-panel {
+      border-radius: 30px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .result-line {
+      border-radius: 18px;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 0.74rem;
+      line-height: 1.38;
+      color: var(--muted);
+    }
+
+    .stats-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .bet-value {
+      font-size: 1.36rem;
+      font-weight: 900;
+    }
+
+    .chance-value {
+      font-size: 1.08rem;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .slider-box {
+      border-radius: 22px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .bet-slider {
+      width: 100%;
+      appearance: none;
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(17, 17, 17, 0.92), rgba(160, 160, 160, 0.66), rgba(255, 255, 255, 0.44));
+      outline: none;
+    }
+
+    .bet-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48));
+      box-shadow: 0 10px 18px rgba(17, 17, 17, 0.14);
+      cursor: pointer;
+    }
+
+    .bet-slider::-moz-range-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48));
+      box-shadow: 0 10px 18px rgba(17, 17, 17, 0.14);
+      cursor: pointer;
+    }
+
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .spin-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: stretch;
+      min-width: 0;
+    }
+
+    .assist-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .secondary-button,
+    .ghost-button {
+      min-height: 52px;
+      border-radius: 20px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      transition: transform 120ms ease, opacity 120ms ease;
+    }
+
+    .secondary-button {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(17, 17, 17, 0.08);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .ghost-button {
+      background: rgba(255, 255, 255, 0.42);
+      border: 1px solid rgba(17, 17, 17, 0.06);
+    }
+
+    .secondary-button:active,
+    .ghost-button:active {
+      transform: scale(0.985);
+    }
+
+    .secondary-button:disabled,
+    .ghost-button:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+
+    .undo-copy {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .spin-button {
+      min-height: 64px;
+      border-radius: 24px;
+      background: #111111;
+      color: #ffffff;
+      font-size: 1.08rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      box-shadow: 0 16px 28px rgba(17, 17, 17, 0.18);
+      transition: transform 120ms ease, opacity 120ms ease;
+    }
+
+    .spin-button:active {
+      transform: scale(0.985);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+
+    .mini-info {
+      min-width: 106px;
+      border-radius: 22px;
+      padding: 10px 12px;
+      text-align: right;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(245, 245, 245, 0.82);
+      backdrop-filter: blur(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    .overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay-card {
+      width: 100%;
+      border-radius: 30px;
+      padding: 24px 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .overlay-title {
+      position: relative;
+      z-index: 1;
+      font-size: 1.7rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .overlay-copy {
+      position: relative;
+      z-index: 1;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .ad-progress {
+      position: relative;
+      z-index: 1;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(17, 17, 17, 0.08);
+    }
+
+    .ad-progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(17, 17, 17, 0.94), rgba(120, 120, 120, 0.88));
+      transition: width 120ms linear;
+    }
+
+    .ad-actions {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 10px;
+    }
+
+    .ad-note {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .overlay-stats {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .overlay-stat {
+      border-radius: 20px;
+      padding: 12px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      background: rgba(255, 255, 255, 0.42);
+      text-align: center;
+      display: grid;
+      gap: 4px;
+    }
+
+    .restart-button {
+      position: relative;
+      z-index: 1;
+      min-height: 62px;
+      border-radius: 24px;
+      background: #111111;
+      color: #ffffff;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+    }
+
+    @keyframes burst-pop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.72); }
+      18% { opacity: 1; transform: translate(-50%, -54%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -66%) scale(1.06); }
+    }
+
+    @keyframes shell-glint {
+      0% { transform: translateX(-150%) rotate(14deg); }
+      100% { transform: translateX(180%) rotate(14deg); }
+    }
+
+    @media (max-width: 520px) {
+      :root {
+        --payline-top: 53%;
+      }
+
+      html,
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      body {
+        align-items: flex-start;
+        padding:
+          max(8px, env(safe-area-inset-top, 0))
+          8px
+          max(8px, env(safe-area-inset-bottom, 0));
+      }
+
+      .app {
+        width: min(calc(100vw - 16px), 430px);
+        max-width: calc(100vw - 16px);
+        height: auto;
+        min-height: calc(100svh - 16px);
+        max-height: none;
+        aspect-ratio: auto;
+        grid-template-rows: auto auto minmax(180px, 1fr) auto;
+        gap: 8px;
+        padding: 12px 10px 14px;
+        overflow: visible;
+        border-radius: 28px;
+        margin: 0 auto;
+      }
+
+      .mini-card {
+        padding: 8px 10px;
+      }
+
+      .label,
+      .tiny {
+        font-size: 0.58rem;
+      }
+
+      .value {
+        font-size: 1.02rem;
+      }
+
+      .mini-subvalue {
+        font-size: 0.6rem;
+      }
+
+      .meta-line {
+        padding: 10px 12px;
+        gap: 6px;
+        border-radius: 22px;
+      }
+
+      .meta-copy {
+        font-size: 0.74rem;
+      }
+
+      .meta-copy > *,
+      .result-line,
+      .stats-line > *,
+      .spin-row > * {
+        min-width: 0;
+      }
+
+      #metaValue,
+      #nextValue,
+      .result-line {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .meta-copy strong {
+        font-size: 0.96rem;
+      }
+
+      .progress-rail {
+        height: 10px;
+      }
+
+      .machine-zone {
+        padding: 2px 0;
+      }
+
+      .machine {
+        width: min(88vw, 320px);
+      }
+
+      .machine-shell {
+        padding: 16px 14px 14px;
+        border-radius: 32px;
+      }
+
+      .machine-window {
+        padding: 12px;
+        border-radius: 28px;
+      }
+
+      .reels {
+        gap: 8px;
+      }
+
+      .reel {
+        border-radius: 18px;
+      }
+
+      .symbol-art {
+        border-radius: 15px;
+      }
+
+      .spin-row {
+        grid-template-columns: 1fr auto;
+      }
+
+      .control-panel {
+        padding: 10px;
+        gap: 8px;
+        border-radius: 24px;
+      }
+
+      .result-line {
+        padding: 10px 12px;
+        font-size: 0.76rem;
+      }
+
+      .stats-line {
+        gap: 10px;
+      }
+
+      .bet-value {
+        font-size: 1.48rem;
+      }
+
+      .chance-value {
+        font-size: 1.14rem;
+      }
+
+      .slider-box {
+        padding: 10px;
+        gap: 8px;
+      }
+
+      .slider-meta {
+        font-size: 0.74rem;
+      }
+
+      .spin-button,
+      .restart-button {
+        min-height: 56px;
+      }
+
+      .secondary-button,
+      .ghost-button {
+        min-height: 48px;
+      }
+
+      .mini-info {
+        min-width: 98px;
+      }
+    }
+
+    @media (max-width: 520px) and (max-height: 760px) {
+      .app {
+        grid-template-rows: auto auto minmax(150px, 1fr) auto;
+      }
+
+      .machine {
+        width: min(82vw, 286px);
+      }
+
+      .machine-shell {
+        padding: 14px 12px 12px;
+      }
+
+      .machine-window {
+        padding: 10px;
+      }
+
+      .control-panel {
+        padding: 9px;
+      }
+
+      .result-line {
+        font-size: 0.72rem;
+      }
+
+      .bet-value {
+        font-size: 1.34rem;
+      }
+
+      .chance-value {
+        font-size: 1.04rem;
+      }
+
+      .spin-button,
+      .restart-button {
+        min-height: 52px;
+      }
+
+      .secondary-button,
+      .ghost-button {
+        min-height: 44px;
+      }
+    }
+
+    @media (min-width: 820px) {
+      .app {
+        width: calc(100vw - 24px);
+        height: calc(100dvh - 24px);
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        grid-template-columns: minmax(360px, 1.35fr) minmax(280px, 0.72fr);
+        grid-template-rows: auto auto minmax(0, 1fr);
+        grid-template-areas:
+          "topbar topbar"
+          "meta meta"
+          "machine controls";
+        gap: clamp(12px, 1.5vw, 18px);
+        padding: clamp(14px, 1.8vw, 22px);
+        border-radius: 40px;
+        align-items: stretch;
+      }
+
+      .topbar,
+      .meta-line {
+        max-width: none;
+      }
+
+      .machine-zone,
+      .control-panel {
+        height: 100%;
+      }
+
+      .machine {
+        width: min(92%, 720px);
+      }
+
+      .machine-shell {
+        padding: 28px 22px 22px;
+        border-radius: 44px;
+      }
+
+      .machine-window {
+        padding: 18px;
+        border-radius: 36px;
+      }
+
+      .reels {
+        gap: 16px;
+      }
+
+      .reel {
+        border-radius: 26px;
+      }
+
+      .symbol-art {
+        border-radius: 20px;
+      }
+
+      .control-panel {
+        align-content: center;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .result-line {
+        font-size: 0.86rem;
+        padding: 12px 14px;
+      }
+
+      .stats-line {
+        align-items: center;
+      }
+
+      .bet-value {
+        font-size: 1.72rem;
+      }
+
+      .chance-value {
+        font-size: 1.26rem;
+      }
+
+      .slider-box {
+        padding: 14px;
+        gap: 10px;
+      }
+
+      .slider-meta {
+        font-size: 0.82rem;
+      }
+
+      .spin-button {
+        min-height: 76px;
+        font-size: 1.18rem;
+      }
+
+      .mini-info {
+        min-width: 130px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .app {
+        grid-template-columns: minmax(520px, 1.42fr) minmax(340px, 0.7fr);
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .machine {
+        width: min(92%, 860px);
+      }
+
+      .value {
+        font-size: 1.28rem;
+      }
+
+      .meta-copy {
+        font-size: 0.88rem;
+      }
+
+      .meta-copy strong {
+        font-size: 1.12rem;
+      }
+
+      .overlay-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 820px) and (max-height: 760px) {
+      .app {
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .mini-card {
+        padding: 8px 10px;
+      }
+
+      .meta-line {
+        padding: 10px 12px;
+        gap: 6px;
+      }
+
+      .machine {
+        width: min(84%, 560px);
+      }
+
+      .machine-shell {
+        padding: 22px 18px 18px;
+        border-radius: 40px;
+      }
+
+      .machine-window {
+        padding: 14px;
+      }
+
+      .control-panel {
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .result-line {
+        padding: 10px 12px;
+        font-size: 0.82rem;
+      }
+
+      .spin-button,
+      .restart-button {
+        min-height: 62px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="mini-card glass">
+        <span class="label">Palier</span>
+        <strong class="value" id="stageValue">1</strong>
+        <span class="mini-subvalue" id="recordValue">Record 0</span>
+      </div>
+      <div class="mini-card glass">
+        <span class="label">Timer</span>
+        <strong class="value" id="timerValue">01:00</strong>
+      </div>
+    </header>
+
+    <section class="meta-line glass">
+      <div class="meta-copy">
+        <span>Objectif</span>
+        <strong id="targetValue">220 &euro;</strong>
+      </div>
+      <div class="meta-copy">
+        <span id="metaValue">Solde 10 &euro; - Chance x1.96</span>
+        <span id="nextValue">Suivant 600 &euro;</span>
+      </div>
+      <div class="progress-rail" aria-hidden="true">
+        <div class="progress-fill" id="goalFill"></div>
+      </div>
+      <div class="time-rail" aria-hidden="true">
+        <div class="time-fill" id="timeFill"></div>
+      </div>
+    </section>
+
+    <section class="machine-zone">
+      <div class="machine" id="machine">
+        <div class="machine-shadow"></div>
+        <div class="machine-shell">
+          <div class="machine-window glass">
+            <div class="payline"></div>
+            <div class="reels">
+              <div class="reel"><div class="reel-track"></div></div>
+              <div class="reel"><div class="reel-track"></div></div>
+              <div class="reel"><div class="reel-track"></div></div>
+            </div>
+          </div>
+
+          <div class="machine-foot">
+            <div class="foot-line"></div>
+          </div>
+        </div>
+
+        <div class="burst" id="burst">+0 &euro;</div>
+      </div>
+    </section>
+
+    <section class="control-panel glass">
+      <div class="result-line glass" id="message">Triple x3. Diamant x20. Dynamite = solde divise par 2.</div>
+
+      <div class="stats-line">
+        <div>
+          <div class="tiny">Mise</div>
+          <div class="bet-value" id="betValue">2 &euro;</div>
+        </div>
+        <div>
+          <div class="tiny">Chance</div>
+          <div class="chance-value" id="luckValue">x1.96</div>
+        </div>
+      </div>
+
+      <div class="slider-box glass">
+        <input class="bet-slider" id="betSlider" type="range" min="1" max="10" step="1" value="2" aria-label="Mise">
+        <div class="slider-meta">
+          <span id="sliderMin">1 &euro;</span>
+          <span id="sliderHint">5 derniers 0/0</span>
+          <span id="sliderMax">10 &euro;</span>
+        </div>
+      </div>
+
+      <div class="spin-row">
+        <button class="spin-button" id="spinButton" type="button">SPIN</button>
+        <div class="mini-info glass">
+          <div class="tiny">Solde</div>
+          <div class="chance-value" id="bankValue">10 &euro;</div>
+        </div>
+      </div>
+
+      <div class="assist-row" id="undoRow" hidden>
+        <button class="secondary-button" id="undoAdButton" type="button">ANNULER LA PERTE</button>
+        <div class="undo-copy" id="undoCopy">Regarder une pub pour restaurer le dernier solde.</div>
+      </div>
+    </section>
+
+    <div class="overlay" id="overlay">
+      <div class="overlay-card glass">
+        <div class="overlay-title" id="overlayTitle">Fin</div>
+        <div class="overlay-copy" id="overlayCopy">Rejoue pour relancer le timer a chaque palier.</div>
+        <div class="overlay-stats">
+          <div class="overlay-stat">
+            <span class="tiny">Palier</span>
+            <strong id="finalStage">1</strong>
+          </div>
+          <div class="overlay-stat">
+            <span class="tiny">Record</span>
+            <strong id="finalRecord">0</strong>
+          </div>
+          <div class="overlay-stat">
+            <span class="tiny">Solde max</span>
+            <strong id="finalBank">0 &euro;</strong>
+          </div>
+          <div class="overlay-stat">
+            <span class="tiny">Spins</span>
+            <strong id="finalSpins">0</strong>
+          </div>
+        </div>
+        <button class="secondary-button" id="overlayUndoButton" type="button" hidden>ANNULER LA DERNIERE PERTE</button>
+        <button class="restart-button" id="restartButton" type="button">REJOUER</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="adOverlay">
+      <div class="overlay-card glass">
+        <div class="overlay-title" id="adTitle">PUB</div>
+        <div class="overlay-copy" id="adCopy">Une courte annonce va se lancer.</div>
+        <div class="ad-progress" aria-hidden="true">
+          <div class="ad-progress-fill" id="adProgressFill"></div>
+        </div>
+        <div class="ad-note" id="adNote">Connexion au provider pub...</div>
+        <div class="ad-actions">
+          <button class="restart-button" id="adPrimaryButton" type="button">REGARDER</button>
+          <button class="ghost-button" id="adSecondaryButton" type="button">PLUS TARD</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const DEFAULT_TIME = 60;
+    const BEST_STAGE_STORAGE_KEY = "slot-liquid-glass-best-stage";
+    const AD_STATE_STORAGE_KEY = "slot-liquid-glass-ad-state";
+    const ADS_CONFIG = {
+      adsenseClient: "",
+      validStageThreshold: 5,
+      validRunsPerInterstitial: 3,
+      mockAdDurationMs: 3600
+    };
+
+    const SYMBOLS = [
+      { id: "grapes", name: "Raisins", row: 0, col: 0, payout: 3, weight: 16, category: "standard", shiftX: "4.5%", shiftY: "-1%", scale: 1.03 },
+      { id: "lemon", name: "Citron", row: 0, col: 1, payout: 3, weight: 15, category: "standard", shiftX: "1.5%", shiftY: "-1.5%", scale: 1.02 },
+      { id: "cherries", name: "Cerises", row: 0, col: 2, payout: 3, weight: 15, category: "standard", shiftX: "-3.5%", shiftY: "-1%", scale: 1.02 },
+      { id: "gift", name: "Cadeau", row: 1, col: 0, payout: 3, weight: 12, category: "standard", shiftX: "0%", shiftY: "0%", scale: 1.01 },
+      { id: "diamond", name: "Diamant", row: 1, col: 1, payout: 20, weight: 5, category: "diamond", shiftX: "0%", shiftY: "-2%", scale: 1.04 },
+      { id: "cashface", name: "Dollar", row: 1, col: 2, payout: 3, weight: 9, category: "standard", shiftX: "0%", shiftY: "-1%", scale: 1.01 },
+      { id: "ticket", name: "Ticket", row: 2, col: 0, payout: 3, weight: 11, category: "standard", shiftX: "0%", shiftY: "-0.5%", scale: 1.01 },
+      { id: "dynamite", name: "Dynamite", row: 2, col: 1, payout: 0, weight: 7, category: "dynamite", shiftX: "-1.5%", shiftY: "-1%", scale: 1.02 },
+      { id: "cash", name: "Cash", row: 2, col: 2, payout: 3, weight: 8, category: "standard", shiftX: "-3%", shiftY: "-1%", scale: 1.03 }
+    ];
+
+    const machine = document.getElementById("machine");
+    const spinButton = document.getElementById("spinButton");
+    const betSlider = document.getElementById("betSlider");
+    const burst = document.getElementById("burst");
+    const overlay = document.getElementById("overlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayCopy = document.getElementById("overlayCopy");
+    const overlayUndoButton = document.getElementById("overlayUndoButton");
+    const restartButton = document.getElementById("restartButton");
+    const adOverlay = document.getElementById("adOverlay");
+    const adTitle = document.getElementById("adTitle");
+    const adCopy = document.getElementById("adCopy");
+    const adProgressFill = document.getElementById("adProgressFill");
+    const adNote = document.getElementById("adNote");
+    const adPrimaryButton = document.getElementById("adPrimaryButton");
+    const adSecondaryButton = document.getElementById("adSecondaryButton");
+    const reels = [...document.querySelectorAll(".reel")];
+    const reelTracks = reels.map((reel) => reel.querySelector(".reel-track"));
+    const touchMedia = window.matchMedia("(pointer: coarse)");
+    const audioState = {
+      context: null,
+      masterGain: null
+    };
+    let lastHapticTime = 0;
+
+    const stageValue = document.getElementById("stageValue");
+    const recordValue = document.getElementById("recordValue");
+    const timerValue = document.getElementById("timerValue");
+    const targetValue = document.getElementById("targetValue");
+    const metaValue = document.getElementById("metaValue");
+    const nextValue = document.getElementById("nextValue");
+    const goalFill = document.getElementById("goalFill");
+    const timeFill = document.getElementById("timeFill");
+    const message = document.getElementById("message");
+    const betValue = document.getElementById("betValue");
+    const luckValue = document.getElementById("luckValue");
+    const sliderMin = document.getElementById("sliderMin");
+    const sliderHint = document.getElementById("sliderHint");
+    const sliderMax = document.getElementById("sliderMax");
+    const bankValue = document.getElementById("bankValue");
+    const undoRow = document.getElementById("undoRow");
+    const undoAdButton = document.getElementById("undoAdButton");
+    const undoCopy = document.getElementById("undoCopy");
+    const finalBank = document.getElementById("finalBank");
+    const finalStage = document.getElementById("finalStage");
+    const finalRecord = document.getElementById("finalRecord");
+    const finalSpins = document.getElementById("finalSpins");
+
+    function loadBestStage() {
+      try {
+        const savedValue = Number(window.localStorage.getItem(BEST_STAGE_STORAGE_KEY));
+        return Number.isFinite(savedValue) && savedValue > 0 ? Math.floor(savedValue) : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function saveBestStage(bestStage) {
+      try {
+        window.localStorage.setItem(BEST_STAGE_STORAGE_KEY, String(bestStage));
+      } catch {
+        return;
+      }
+    }
+
+    function loadAdState() {
+      try {
+        const parsed = JSON.parse(window.localStorage.getItem(AD_STATE_STORAGE_KEY) || "{}");
+        return {
+          validRunsTowardInterstitial: Math.max(0, Math.floor(parsed.validRunsTowardInterstitial || 0))
+        };
+      } catch {
+        return { validRunsTowardInterstitial: 0 };
+      }
+    }
+
+    function saveAdState(adState) {
+      try {
+        window.localStorage.setItem(AD_STATE_STORAGE_KEY, JSON.stringify(adState));
+      } catch {
+        return;
+      }
+    }
+
+    const state = {
+      bank: 10,
+      selectedBet: 2,
+      currentSpinBet: null,
+      stageIndex: 0,
+      timeLeft: DEFAULT_TIME,
+      started: false,
+      ended: false,
+      spinning: false,
+      pendingFinish: false,
+      spinCount: 0,
+      timerId: null,
+      peakBank: 10,
+      currentSymbols: ["grapes", "lemon", "cherries"],
+      recentOutcomes: [],
+      bestStage: loadBestStage(),
+      adState: loadAdState(),
+      pendingUndo: null,
+      adBusy: false
+    };
+
+    function formatEuro(value) {
+      return `${Math.max(0, Math.round(value))} \u20AC`;
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function byId(id) {
+      return SYMBOLS.find((symbol) => symbol.id === id);
+    }
+
+    function getStageTarget(stageIndex) {
+      const raw = 220 * Math.pow(1.78, stageIndex) + stageIndex * 70;
+      return Math.max(220, Math.round(raw / 10) * 10);
+    }
+
+    function getTarget() {
+      return getStageTarget(state.stageIndex);
+    }
+
+    function getNextTarget() {
+      return getStageTarget(state.stageIndex + 1);
+    }
+
+    function setBestStage(stage) {
+      if (stage <= state.bestStage) {
+        return false;
+      }
+
+      state.bestStage = stage;
+      saveBestStage(stage);
+      return true;
+    }
+
+    function syncPeakBank() {
+      state.peakBank = Math.max(state.peakBank, state.bank);
+    }
+
+    function getStageBetCap(stageIndex = state.stageIndex) {
+      return Math.max(1, Math.floor(getStageTarget(stageIndex) * 0.2));
+    }
+
+    function getAvailableBetMax(bank = state.bank, stageIndex = state.stageIndex) {
+      const bankCap = Math.max(1, Math.floor(bank));
+      return Math.max(1, Math.min(bankCap, getStageBetCap(stageIndex)));
+    }
+
+    function updateMessage(text) {
+      message.textContent = text;
+    }
+
+    function maybeLoadAdsenseScript() {
+      if (!ADS_CONFIG.adsenseClient || document.getElementById("adsense-bootstrap")) {
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "adsense-bootstrap";
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(ADS_CONFIG.adsenseClient)}`;
+      document.head.appendChild(script);
+    }
+
+    function setPendingUndo(pendingUndo) {
+      state.pendingUndo = pendingUndo;
+      updateUndoUi();
+    }
+
+    function getUndoRestoreAmount() {
+      if (!state.pendingUndo) {
+        return 0;
+      }
+
+      return Math.max(0, Math.round(state.pendingUndo.restoreBank - state.bank));
+    }
+
+    function updateUndoUi() {
+      const hasPendingUndo = Boolean(state.pendingUndo);
+      const restoreAmount = getUndoRestoreAmount();
+      const restoreText = hasPendingUndo
+        ? `Regarder une pub pour recuperer ${formatEuro(restoreAmount)} et revenir a ${formatEuro(state.pendingUndo.restoreBank)}.`
+        : "Regarder une pub pour restaurer le dernier solde.";
+      const canUndoInRun = hasPendingUndo && !state.spinning && !state.ended && !state.adBusy;
+      const canUndoFromOverlay = hasPendingUndo && state.ended && state.timeLeft > 0 && !state.adBusy;
+
+      undoCopy.textContent = restoreText;
+      undoRow.hidden = !hasPendingUndo || state.ended;
+      undoAdButton.disabled = !canUndoInRun;
+
+      overlayUndoButton.hidden = !canUndoFromOverlay;
+      overlayUndoButton.disabled = !canUndoFromOverlay;
+    }
+
+    function markRunForInterstitial(achievedStage) {
+      if (achievedStage < ADS_CONFIG.validStageThreshold) {
+        return false;
+      }
+
+      state.adState.validRunsTowardInterstitial += 1;
+      const shouldShow = state.adState.validRunsTowardInterstitial >= ADS_CONFIG.validRunsPerInterstitial;
+
+      if (shouldShow) {
+        state.adState.validRunsTowardInterstitial = 0;
+      }
+
+      saveAdState(state.adState);
+      return shouldShow;
+    }
+
+    function runAdBreak({
+      title,
+      copy,
+      note,
+      durationMs = ADS_CONFIG.mockAdDurationMs,
+      actionLabel = "REGARDER",
+      cancelLabel = "PLUS TARD",
+      autoStart = false,
+      cancellable = true
+    }) {
+      if (state.adBusy) {
+        return Promise.resolve(false);
+      }
+
+      state.adBusy = true;
+      updateHud();
+
+      return new Promise((resolve) => {
+        let rafId = 0;
+        let startAt = 0;
+        let started = false;
+
+        const cleanup = (completed) => {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+
+          adOverlay.classList.remove("is-visible");
+          adPrimaryButton.onclick = null;
+          adSecondaryButton.onclick = null;
+          adProgressFill.style.width = "0%";
+          state.adBusy = false;
+          updateHud();
+          resolve(completed);
+        };
+
+        const tick = (now) => {
+          if (!started) {
+            return;
+          }
+
+          const progress = Math.min(1, (now - startAt) / durationMs);
+          adProgressFill.style.width = `${progress * 100}%`;
+          adNote.textContent = progress >= 1
+            ? "Annonce terminee."
+            : `Annonce en cours... ${Math.max(1, Math.ceil((durationMs - (now - startAt)) / 1000))}s`;
+
+          if (progress >= 1) {
+            cleanup(true);
+            return;
+          }
+
+          rafId = requestAnimationFrame(tick);
+        };
+
+        const startPlayback = () => {
+          if (started) {
+            return;
+          }
+
+          started = true;
+          adPrimaryButton.disabled = true;
+          adSecondaryButton.disabled = true;
+          adPrimaryButton.textContent = "PUB EN COURS";
+          startAt = performance.now();
+          adNote.textContent = note;
+          rafId = requestAnimationFrame(tick);
+        };
+
+        adTitle.textContent = title;
+        adCopy.textContent = copy;
+        adNote.textContent = note;
+        adPrimaryButton.textContent = actionLabel;
+        adPrimaryButton.disabled = false;
+        adSecondaryButton.textContent = cancelLabel;
+        adSecondaryButton.disabled = false;
+        adSecondaryButton.hidden = !cancellable && autoStart;
+        adProgressFill.style.width = "0%";
+        adOverlay.classList.add("is-visible");
+
+        adPrimaryButton.onclick = startPlayback;
+        adSecondaryButton.onclick = () => cleanup(false);
+
+        if (autoStart) {
+          startPlayback();
+        }
+      });
+    }
+
+    async function showInterstitialAdBreak() {
+      maybeLoadAdsenseScript();
+      return runAdBreak({
+        title: "PUB",
+        copy: "Pause pub apres 3 parties valables. Merci de soutenir le jeu.",
+        note: "Annonce en cours...",
+        actionLabel: "OK",
+        cancelLabel: "FERMER",
+        autoStart: true,
+        cancellable: false
+      });
+    }
+
+    async function showRewardedUndoAd() {
+      maybeLoadAdsenseScript();
+      return runAdBreak({
+        title: "ANNULER LA PERTE",
+        copy: `Regarde une courte pub pour recuperer ${formatEuro(getUndoRestoreAmount())}.`,
+        note: "Annonce recompensee en cours...",
+        actionLabel: "REGARDER LA PUB",
+        cancelLabel: "ANNULER",
+        autoStart: false,
+        cancellable: true
+      });
+    }
+
+    async function redeemUndoAdReward() {
+      if (!state.pendingUndo || state.spinning || state.adBusy) {
+        return;
+      }
+
+      const completed = await showRewardedUndoAd();
+      if (!completed || !state.pendingUndo) {
+        updateUndoUi();
+        return;
+      }
+
+      const restoredBank = state.pendingUndo.restoreBank;
+      const restoredAmount = Math.max(0, Math.round(restoredBank - state.bank));
+      const canResumeRun = state.ended && state.timeLeft > 0;
+
+      state.bank = restoredBank;
+      syncPeakBank();
+      setPendingUndo(null);
+
+      if (canResumeRun) {
+        state.ended = false;
+        overlay.classList.remove("is-visible");
+        if (state.started && state.timeLeft > 0) {
+          startTimer();
+        }
+      }
+
+      machine.classList.add("is-winning");
+      showBurst(`+${formatEuro(restoredAmount)}`);
+      updateMessage(`Perte annulee. Tu recuperes ${formatEuro(restoredAmount)}.`);
+      vibrate([16, 24, 16]);
+      void playTripleWinSound();
+      ensureBetIsValid();
+      updateHud();
+    }
+
+    function isTouchHapticsDevice() {
+      return touchMedia.matches || navigator.maxTouchPoints > 0;
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate && isTouchHapticsDevice()) {
+        navigator.vibrate(pattern);
+      }
+    }
+
+    function stopSpinHaptics() {
+      if (navigator.vibrate && isTouchHapticsDevice()) {
+        navigator.vibrate(0);
+      }
+    }
+
+    function pulseHaptic(duration, minGap = 36) {
+      if (!(navigator.vibrate && isTouchHapticsDevice())) {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastHapticTime < minGap) {
+        return;
+      }
+
+      lastHapticTime = now;
+      navigator.vibrate(duration);
+    }
+
+    function startSpinHaptics() {
+      lastHapticTime = 0;
+      pulseHaptic(16, 0);
+    }
+
+    async function ensureAudioContext() {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) {
+        return null;
+      }
+
+      if (!audioState.context) {
+        try {
+          audioState.context = new AudioCtor();
+          audioState.masterGain = audioState.context.createGain();
+          audioState.masterGain.gain.value = 0.18;
+          audioState.masterGain.connect(audioState.context.destination);
+        } catch {
+          audioState.context = null;
+          audioState.masterGain = null;
+          return null;
+        }
+      }
+
+      if (audioState.context.state === "suspended") {
+        try {
+          await audioState.context.resume();
+        } catch {
+          return null;
+        }
+      }
+
+      return audioState.context;
+    }
+
+    function playTone(context, {
+      time = context.currentTime,
+      frequency = 440,
+      endFrequency = frequency,
+      duration = 0.16,
+      gain = 0.04,
+      type = "triangle"
+    }) {
+      if (!audioState.masterGain) {
+        return;
+      }
+
+      const oscillator = context.createOscillator();
+      const envelope = context.createGain();
+
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, time);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endFrequency), time + duration);
+
+      envelope.gain.setValueAtTime(0.0001, time);
+      envelope.gain.exponentialRampToValueAtTime(gain, time + 0.012);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+      oscillator.connect(envelope);
+      envelope.connect(audioState.masterGain);
+      oscillator.start(time);
+      oscillator.stop(time + duration + 0.03);
+    }
+
+    function playSpinTick(reelIndex = 0, depth = 0) {
+      const context = audioState.context;
+      if (!context) {
+        return;
+      }
+
+      const time = context.currentTime;
+      const base = 210 + reelIndex * 18 + Math.min(depth, 6) * 2;
+      playTone(context, {
+        time,
+        frequency: base,
+        endFrequency: base - 44,
+        duration: 0.04,
+        gain: 0.026,
+        type: "square"
+      });
+      playTone(context, {
+        time: time + 0.006,
+        frequency: 880 + reelIndex * 60,
+        endFrequency: 620 + reelIndex * 40,
+        duration: 0.032,
+        gain: 0.008,
+        type: "triangle"
+      });
+    }
+
+    function playReelStopClack(reelIndex = 0) {
+      const context = audioState.context;
+      if (!context) {
+        return;
+      }
+
+      const time = context.currentTime;
+      const base = 140 + reelIndex * 12;
+      playTone(context, {
+        time,
+        frequency: base,
+        endFrequency: base * 0.82,
+        duration: 0.06,
+        gain: 0.042,
+        type: "square"
+      });
+      playTone(context, {
+        time: time + 0.008,
+        frequency: 640 + reelIndex * 30,
+        endFrequency: 360 + reelIndex * 18,
+        duration: 0.05,
+        gain: 0.015,
+        type: "triangle"
+      });
+    }
+
+    async function startSpinAudio() {
+      const context = await ensureAudioContext();
+      if (!context) {
+        return;
+      }
+    }
+
+    function stopSpinAudio() {
+      return;
+    }
+
+    async function playTripleWinSound() {
+      const context = await ensureAudioContext();
+      if (!context) {
+        return;
+      }
+
+      const time = context.currentTime + 0.01;
+      [523.25, 659.25, 783.99].forEach((frequency, index) => {
+        playTone(context, {
+          time: time + index * 0.07,
+          frequency,
+          endFrequency: frequency * 1.03,
+          duration: 0.18,
+          gain: 0.04,
+          type: "triangle"
+        });
+      });
+      playTone(context, {
+        time,
+        frequency: 261.63,
+        endFrequency: 329.63,
+        duration: 0.32,
+        gain: 0.018,
+        type: "sine"
+      });
+    }
+
+    async function playDiamondJackpotSound() {
+      const context = await ensureAudioContext();
+      if (!context) {
+        return;
+      }
+
+      const time = context.currentTime + 0.01;
+      [392, 523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+        playTone(context, {
+          time: time + index * 0.075,
+          frequency,
+          endFrequency: frequency * 1.04,
+          duration: 0.24,
+          gain: 0.042,
+          type: index < 2 ? "triangle" : "sine"
+        });
+      });
+      [1318.51, 1567.98].forEach((frequency, index) => {
+        playTone(context, {
+          time: time + 0.36 + index * 0.09,
+          frequency,
+          endFrequency: frequency,
+          duration: 0.34,
+          gain: 0.03,
+          type: "triangle"
+        });
+      });
+    }
+
+    async function playDynamiteLoseSound() {
+      const context = await ensureAudioContext();
+      if (!context) {
+        return;
+      }
+
+      const time = context.currentTime + 0.01;
+      [392, 311.13, 246.94].forEach((frequency, index) => {
+        playTone(context, {
+          time: time + index * 0.08,
+          frequency,
+          endFrequency: frequency * 0.76,
+          duration: 0.18,
+          gain: 0.038,
+          type: index === 0 ? "triangle" : "sine"
+        });
+      });
+      playTone(context, {
+        time: time + 0.05,
+        frequency: 164.81,
+        endFrequency: 72,
+        duration: 0.34,
+        gain: 0.032,
+        type: "sawtooth"
+      });
+      playTone(context, {
+        time: time + 0.16,
+        frequency: 110,
+        endFrequency: 55,
+        duration: 0.24,
+        gain: 0.022,
+        type: "triangle"
+      });
+    }
+
+    function renderSymbolCell(symbolId) {
+      const symbol = byId(symbolId);
+      const x = `${symbol.col * 50}%`;
+      const y = `${symbol.row * 50}%`;
+      return `
+        <div class="symbol-cell">
+          <div class="symbol-frame" style="--symbol-scale:${symbol.scale || 1};">
+            <div class="symbol-art" aria-label="${symbol.name}" style="background-position:${x} ${y};"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStillReels(symbolIds = state.currentSymbols) {
+      reelTracks.forEach((track, index) => {
+        track.style.transition = "none";
+        track.style.willChange = "auto";
+        track.style.transform = "translate3d(0, 0, 0)";
+        track.innerHTML = renderSymbolCell(symbolIds[index]);
+      });
+    }
+
+    function showBurst(text) {
+      burst.textContent = text;
+      burst.classList.remove("is-visible");
+      void burst.offsetWidth;
+      burst.classList.add("is-visible");
+    }
+
+    async function resolveSymbolsAsset() {
+      const candidates = ["./assets/symbols.png", "./symbols.png"];
+
+      for (const candidate of candidates) {
+        const ok = await new Promise((resolve) => {
+          const image = new Image();
+          image.onload = () => resolve(true);
+          image.onerror = () => resolve(false);
+          image.src = candidate;
+        });
+
+        if (ok) {
+          document.documentElement.style.setProperty("--symbols-image", `url("${candidate}")`);
+          return;
+        }
+      }
+    }
+
+    function getRecentWinRate() {
+      if (!state.recentOutcomes.length) {
+        return 0;
+      }
+
+      const wins = state.recentOutcomes.filter(Boolean).length;
+      return wins / state.recentOutcomes.length;
+    }
+
+    function getRiskRatio(bank = state.bank, bet = state.selectedBet) {
+      const maxBet = getAvailableBetMax(bank);
+      return clamp(bet / maxBet, 0.1, 1);
+    }
+
+    function getLuckParts(bank = state.bank, bet = state.selectedBet) {
+      const riskRatio = getRiskRatio(bank, bet);
+      const riskBoost = Math.pow(riskRatio, 1.35) * 6.7;
+      const streakBoost = Math.pow(getRecentWinRate(), 2.9) * 1.6;
+      const stageBoost = Math.min(0.9, Math.log2(state.stageIndex + 1) * 0.14);
+      const total = clamp(1 + riskBoost + streakBoost + stageBoost, 1, 10);
+
+      return {
+        total,
+        riskRatio,
+        riskBoost,
+        streakBoost,
+        stageBoost
+      };
+    }
+
+    function ensureBetIsValid() {
+      if (state.spinning && state.currentSpinBet !== null) {
+        return;
+      }
+
+      const maxBet = getAvailableBetMax();
+      state.selectedBet = clamp(Math.round(state.selectedBet), 1, maxBet);
+    }
+
+    function updateSliderFill() {
+      const maxBet = Math.max(1, Number(betSlider.max));
+      const percent = ((Number(betSlider.value) - 1) / Math.max(1, maxBet - 1)) * 100;
+      betSlider.style.background = `linear-gradient(90deg, rgba(17,17,17,0.94) 0%, rgba(120,120,120,0.72) ${percent}%, rgba(255,255,255,0.46) ${percent}%, rgba(255,255,255,0.46) 100%)`;
+    }
+
+    function syncSlider() {
+      const displayedBet = state.currentSpinBet ?? state.selectedBet;
+      const restoredBank = state.currentSpinBet !== null ? state.bank + state.currentSpinBet : state.bank;
+      const maxBet = state.currentSpinBet !== null
+        ? Math.max(displayedBet, getAvailableBetMax(restoredBank))
+        : getAvailableBetMax(state.bank);
+
+      betSlider.max = String(Math.max(1, maxBet));
+      betSlider.value = String(clamp(displayedBet, 1, Math.max(1, maxBet)));
+      sliderMin.textContent = "1 \u20AC";
+      sliderMax.textContent = formatEuro(Math.max(1, maxBet));
+      updateSliderFill();
+    }
+
+    function updateHud() {
+      ensureBetIsValid();
+      syncSlider();
+
+      const displayedBet = state.currentSpinBet ?? state.selectedBet;
+      const displayedBankForLuck = state.currentSpinBet !== null ? state.bank + state.currentSpinBet : state.bank;
+      const luck = getLuckParts(displayedBankForLuck, displayedBet);
+      const target = getTarget();
+      const nextTarget = getNextTarget();
+      const progress = clamp(state.bank / target, 0, 1);
+      const timeRatio = clamp(state.timeLeft / DEFAULT_TIME, 0, 1);
+      const wins = state.recentOutcomes.filter(Boolean).length;
+
+      stageValue.textContent = `${state.stageIndex + 1}`;
+      recordValue.textContent = `Record ${state.bestStage || 0}`;
+      timerValue.textContent = formatTime(state.timeLeft);
+      targetValue.textContent = formatEuro(target);
+      metaValue.textContent = `Solde ${formatEuro(state.bank)} - Chance x${luck.total.toFixed(2)}`;
+      nextValue.textContent = nextTarget ? `Suivant ${formatEuro(nextTarget)}` : "Dernier";
+      goalFill.style.width = `${progress * 100}%`;
+      timeFill.style.width = `${timeRatio * 100}%`;
+      betValue.textContent = formatEuro(displayedBet);
+      luckValue.textContent = `x${luck.total.toFixed(2)}`;
+      sliderHint.textContent = `5 derniers ${wins}/${state.recentOutcomes.length || 0}`;
+      bankValue.textContent = formatEuro(state.bank);
+
+      spinButton.disabled = state.spinning || state.ended || state.bank < 1 || state.timeLeft <= 0 || state.adBusy;
+      betSlider.disabled = state.spinning || state.ended || state.adBusy;
+      updateUndoUi();
+    }
+
+    function pushRecentOutcome(isWin) {
+      state.recentOutcomes.push(isWin);
+      if (state.recentOutcomes.length > 5) {
+        state.recentOutcomes.shift();
+      }
+    }
+
+    function startTimer() {
+      if (state.timerId) {
+        return;
+      }
+
+      state.timerId = window.setInterval(() => {
+        if (state.ended) {
+          clearInterval(state.timerId);
+          state.timerId = null;
+          return;
+        }
+
+        state.timeLeft -= 1;
+        updateHud();
+
+        if (state.timeLeft <= 0) {
+          if (state.spinning) {
+            state.pendingFinish = true;
+          } else {
+            finishGame();
+          }
+        }
+      }, 1000);
+    }
+
+    function weightedPick(symbols, luck) {
+      const totalWeight = symbols.reduce((sum, symbol) => {
+        let modifier = 1;
+
+        if (symbol.category === "diamond") {
+          modifier += (luck - 1) * 0.2;
+        } else if (symbol.category === "dynamite") {
+          modifier += (luck - 1) * 0.08;
+        } else {
+          modifier += (luck - 1) * 0.12;
+        }
+
+        return sum + symbol.weight * modifier;
+      }, 0);
+
+      let cursor = Math.random() * totalWeight;
+      for (const symbol of symbols) {
+        let modifier = 1;
+
+        if (symbol.category === "diamond") {
+          modifier += (luck - 1) * 0.2;
+        } else if (symbol.category === "dynamite") {
+          modifier += (luck - 1) * 0.08;
+        } else {
+          modifier += (luck - 1) * 0.12;
+        }
+
+        cursor -= symbol.weight * modifier;
+        if (cursor <= 0) {
+          return symbol;
+        }
+      }
+
+      return symbols[0];
+    }
+
+    function chooseMixedOutcome(luck) {
+      let picks = [];
+
+      while (!picks.length || (picks[0] === picks[1] && picks[1] === picks[2])) {
+        picks = [
+          weightedPick(SYMBOLS, luck).id,
+          weightedPick(SYMBOLS, luck * 0.98).id,
+          weightedPick(SYMBOLS, luck * 1.02).id
+        ];
+      }
+
+      return picks;
+    }
+
+    function determineOutcome(luck) {
+      const normalizedLuck = clamp((luck - 1) / 9, 0, 1);
+      const winChance = 0.13 + Math.pow(normalizedLuck, 1.18) * 0.43;
+      const dynamiteChance = 0.01 + normalizedLuck * 0.022;
+      const roll = Math.random();
+
+      if (roll < winChance) {
+        const nonDynamite = SYMBOLS.filter((symbol) => symbol.id !== "dynamite");
+        const symbol = weightedPick(nonDynamite, luck);
+        return [symbol.id, symbol.id, symbol.id];
+      }
+
+      if (roll < winChance + dynamiteChance) {
+        return ["dynamite", "dynamite", "dynamite"];
+      }
+
+      return chooseMixedOutcome(luck);
+    }
+
+    function evaluateOutcome(symbolIds, bet) {
+      const triple = symbolIds[0] === symbolIds[1] && symbolIds[1] === symbolIds[2];
+      if (!triple) {
+        return {
+          type: "miss",
+          amount: 0,
+          burst: "AIR",
+          message: "Pas de triple. Rapproche la mise du solde pour pousser la chance."
+        };
+      }
+
+      const symbol = byId(symbolIds[0]);
+      if (symbol.id === "dynamite") {
+        return {
+          type: "halve",
+          amount: 0,
+          symbol,
+          burst: "SOLDE /2",
+          message: "Triple dynamite. Ton solde courant est coupe en deux."
+        };
+      }
+
+      const reward = bet * symbol.payout;
+      return {
+        type: "win",
+        amount: reward,
+        symbol,
+        burst: `+${formatEuro(reward)}`,
+        message: `Triple ${symbol.name.toLowerCase()}. Tu prends ${formatEuro(reward)}.`
+      };
+    }
+
+    function animateReels(finalSymbols, luck) {
+      const jobs = reels.map((reel, index) => {
+        const track = reelTracks[index];
+        const sequence = [state.currentSymbols[index]];
+        const spinDepth = 14 + index * 3;
+
+        for (let i = 0; i < spinDepth; i += 1) {
+          sequence.push(weightedPick(SYMBOLS, luck * 0.42).id);
+        }
+        sequence.push(finalSymbols[index], finalSymbols[index]);
+
+        const settleIndex = sequence.length - 2;
+
+        track.innerHTML = sequence.map((symbolId) => renderSymbolCell(symbolId)).join("");
+        track.style.transition = "none";
+        track.style.willChange = "transform";
+        track.style.transform = "translate3d(0, 0, 0)";
+
+        return new Promise((resolve) => {
+          let finished = false;
+          let fallbackTimer = null;
+          let rafId = 0;
+          let lastStep = 0;
+          let cellHeight = reel.getBoundingClientRect().height;
+
+          const settleTrack = () => {
+            if (finished) {
+              return;
+            }
+
+            finished = true;
+            track.removeEventListener("transitionend", handleTransitionEnd);
+            window.clearTimeout(fallbackTimer);
+            window.cancelAnimationFrame(rafId);
+
+            if (lastStep < settleIndex - 1) {
+              lastStep = settleIndex - 1;
+            }
+
+            track.style.transition = "none";
+            track.style.willChange = "auto";
+            playReelStopClack(index);
+            pulseHaptic(14, 0);
+            resolve();
+          };
+
+          const handleTransitionEnd = (event) => {
+            if (event.propertyName !== "transform") {
+              return;
+            }
+
+            settleTrack();
+          };
+
+          const sampleSteps = () => {
+            if (finished) {
+              return;
+            }
+
+            const matrix = new DOMMatrixReadOnly(getComputedStyle(track).transform);
+            const traveled = Math.max(0, -matrix.m42);
+            const step = Math.min(settleIndex, Math.floor(traveled / cellHeight));
+
+            if (step > lastStep) {
+              for (let currentStep = lastStep + 1; currentStep <= step; currentStep += 1) {
+                if (currentStep < settleIndex) {
+                  playSpinTick(index, currentStep);
+                  pulseHaptic(8, 42);
+                }
+              }
+              lastStep = step;
+            }
+
+            rafId = window.requestAnimationFrame(sampleSteps);
+          };
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const firstCell = track.firstElementChild;
+              cellHeight = firstCell
+                ? firstCell.getBoundingClientRect().height
+                : reel.getBoundingClientRect().height;
+              const settleOffset = Number((settleIndex * cellHeight).toFixed(3));
+              const duration = 760 + index * 180;
+              fallbackTimer = window.setTimeout(settleTrack, duration + 120);
+
+              track.addEventListener("transitionend", handleTransitionEnd);
+              track.style.transition = `transform ${duration}ms cubic-bezier(0.16, 0.84, 0.16, 1)`;
+              track.style.transform = `translate3d(0, -${settleOffset}px, 0)`;
+              rafId = window.requestAnimationFrame(sampleSteps);
+            });
+          });
+        });
+      });
+
+      return Promise.all(jobs);
+    }
+
+    function maybeAdvanceStage() {
+      let advanced = false;
+
+      while (state.bank >= getStageTarget(state.stageIndex)) {
+        state.stageIndex += 1;
+        advanced = true;
+      }
+
+      if (advanced) {
+        state.timeLeft = DEFAULT_TIME;
+        state.pendingFinish = false;
+        machine.classList.add("is-winning");
+        showBurst(`PALIER ${state.stageIndex + 1}`);
+        updateMessage(`Nouveau palier. Le timer repart a ${formatTime(DEFAULT_TIME)}.`);
+        vibrate([40, 40, 80]);
+      }
+    }
+
+    async function triggerSpin() {
+      if (state.spinning || state.ended || state.adBusy) {
+        return;
+      }
+
+      ensureBetIsValid();
+      if (state.bank < 1) {
+        finishGame();
+        return;
+      }
+
+      if (!state.started) {
+        state.started = true;
+        startTimer();
+      }
+
+      const bankBeforeSpin = state.bank;
+      const spinBet = state.selectedBet;
+      const spinLuck = getLuckParts(state.bank, spinBet).total;
+      setPendingUndo(null);
+      state.spinning = true;
+      state.currentSpinBet = spinBet;
+      state.spinCount += 1;
+      state.bank = Math.max(0, state.bank - spinBet);
+      machine.classList.remove("is-winning");
+
+      updateHud();
+      updateMessage(`Mise ${formatEuro(spinBet)}. Chance calculee a x${spinLuck.toFixed(2)}.`);
+      startSpinHaptics();
+      void startSpinAudio();
+
+      const finalSymbols = determineOutcome(spinLuck);
+      try {
+        await animateReels(finalSymbols, spinLuck);
+      } finally {
+        stopSpinAudio();
+        stopSpinHaptics();
+      }
+
+      state.currentSymbols = finalSymbols;
+      const result = evaluateOutcome(finalSymbols, spinBet);
+
+      if (result.type === "win") {
+        state.bank += result.amount;
+        syncPeakBank();
+        setPendingUndo(null);
+        machine.classList.add("is-winning");
+        showBurst(result.burst);
+        pushRecentOutcome(true);
+        updateMessage(result.message);
+        vibrate([20, 30, 60]);
+        if (result.symbol.id === "diamond") {
+          void playDiamondJackpotSound();
+        } else {
+          void playTripleWinSound();
+        }
+      } else if (result.type === "halve") {
+        const beforeHalf = state.bank;
+        state.bank = Math.floor(state.bank / 2);
+        const loss = beforeHalf - state.bank;
+        setPendingUndo({
+          kind: "halve",
+          restoreBank: bankBeforeSpin,
+          afterBank: state.bank
+        });
+        machine.classList.add("is-winning");
+        showBurst(`-${formatEuro(loss)}`);
+        pushRecentOutcome(false);
+        updateMessage(`Triple dynamite. Ton solde passe de ${formatEuro(beforeHalf)} a ${formatEuro(state.bank)}.`);
+        vibrate([40, 40, 60]);
+        void playDynamiteLoseSound();
+      } else {
+        setPendingUndo({
+          kind: "miss",
+          restoreBank: bankBeforeSpin,
+          afterBank: state.bank
+        });
+        pushRecentOutcome(false);
+        updateMessage(result.message);
+      }
+
+      maybeAdvanceStage();
+      state.spinning = false;
+      state.currentSpinBet = null;
+      ensureBetIsValid();
+      updateHud();
+
+      if (state.pendingFinish || state.timeLeft <= 0) {
+        state.pendingFinish = false;
+        finishGame();
+        return;
+      }
+
+      if (state.bank < 1) {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      if (state.ended) {
+        return;
+      }
+
+      state.ended = true;
+      state.spinning = false;
+      stopSpinAudio();
+      stopSpinHaptics();
+
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+
+      const achievedStage = state.stageIndex + 1;
+      const timedOut = state.timeLeft <= 0;
+      const hasNewRecord = setBestStage(achievedStage);
+      const shouldShowInterstitial = markRunForInterstitial(achievedStage);
+
+      updateHud();
+
+      overlayTitle.textContent = timedOut ? "Temps ecoule" : "Fin de run";
+      overlayCopy.textContent = timedOut
+        ? `Tu termines avec ${formatEuro(state.bank)}. Le timer repartait a chaque palier valide.`
+        : `Le solde est vide apres ${state.spinCount} spins.`;
+
+      if (hasNewRecord) {
+        overlayCopy.textContent += ` Nouveau record au palier ${achievedStage}.`;
+      }
+
+      finalBank.textContent = formatEuro(state.peakBank);
+      finalStage.textContent = `${achievedStage}`;
+      finalRecord.textContent = `${state.bestStage || 0}`;
+      finalSpins.textContent = `${state.spinCount}`;
+
+      overlay.classList.add("is-visible");
+      updateMessage("Rejoue avec une mise plus agressive si tu veux forcer la chance vers x10.");
+      spinButton.disabled = true;
+
+      if (shouldShowInterstitial) {
+        window.setTimeout(() => {
+          void showInterstitialAdBreak();
+        }, 180);
+      }
+    }
+
+    function resetGame() {
+      state.bank = 10;
+      state.selectedBet = 2;
+      state.currentSpinBet = null;
+      state.stageIndex = 0;
+      state.timeLeft = DEFAULT_TIME;
+      state.started = false;
+      state.ended = false;
+      state.spinning = false;
+      state.pendingFinish = false;
+      state.spinCount = 0;
+      state.peakBank = 10;
+      state.currentSymbols = ["grapes", "lemon", "cherries"];
+      state.recentOutcomes = [];
+      state.pendingUndo = null;
+
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+
+      state.adBusy = false;
+      adOverlay.classList.remove("is-visible");
+      adProgressFill.style.width = "0%";
+      stopSpinAudio();
+      stopSpinHaptics();
+      overlay.classList.remove("is-visible");
+      machine.classList.remove("is-winning");
+      updateMessage("Triple x3. Diamant x20. Dynamite = solde divise par 2.");
+      renderStillReels();
+      updateHud();
+    }
+
+    betSlider.addEventListener("input", () => {
+      if (state.spinning || state.ended) {
+        return;
+      }
+
+      state.selectedBet = Number(betSlider.value);
+      updateHud();
+    });
+
+    spinButton.addEventListener("click", triggerSpin);
+    machine.addEventListener("click", triggerSpin);
+    undoAdButton.addEventListener("click", redeemUndoAdReward);
+    overlayUndoButton.addEventListener("click", redeemUndoAdReward);
+    restartButton.addEventListener("click", resetGame);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "Enter") {
+        event.preventDefault();
+        if (adOverlay.classList.contains("is-visible")) {
+          return;
+        }
+        if (overlay.classList.contains("is-visible")) {
+          resetGame();
+          return;
+        }
+        triggerSpin();
+      }
+    });
+
+    maybeLoadAdsenseScript();
+    resolveSymbolsAsset().finally(() => {
+      renderStillReels();
+      updateHud();
+    });
+  </script>
+</body>
+</html>
