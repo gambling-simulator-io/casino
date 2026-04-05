@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script
+    id="adsense-bootstrap"
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1377111970575860"
+    crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>🎰Slot Casino</title>
@@ -21,6 +26,10 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     html,
@@ -1232,10 +1241,18 @@
     const BEST_STAGE_STORAGE_KEY = "slot-liquid-glass-best-stage";
     const AD_STATE_STORAGE_KEY = "slot-liquid-glass-ad-state";
     const ADS_CONFIG = {
-      adsenseClient: "",
+      adsenseClient: "ca-pub-1377111970575860",
+      adManagerRewardedAdUnitPath: "",
       validStageThreshold: 5,
       validRunsPerInterstitial: 3,
       mockAdDurationMs: 3600
+    };
+
+    window.googletag = window.googletag || { cmd: [] };
+
+    const gptState = {
+      scriptPromise: null,
+      servicesEnabled: false
     };
 
     const SYMBOLS = [
@@ -1352,7 +1369,8 @@
       bestStage: loadBestStage(),
       adState: loadAdState(),
       pendingUndo: null,
-      adBusy: false
+      adBusy: false,
+      timerPausedByAd: false
     };
 
     function formatEuro(value) {
@@ -1426,6 +1444,92 @@
       document.head.appendChild(script);
     }
 
+    function canUseGoogleRewardedAds() {
+      return Boolean(ADS_CONFIG.adManagerRewardedAdUnitPath);
+    }
+
+    function maybeLoadGptScript() {
+      if (!canUseGoogleRewardedAds()) {
+        return Promise.resolve(false);
+      }
+
+      if (window.googletag?.apiReady) {
+        return Promise.resolve(true);
+      }
+
+      if (gptState.scriptPromise) {
+        return gptState.scriptPromise;
+      }
+
+      const existingScript = document.getElementById("gpt-bootstrap");
+      if (existingScript) {
+        gptState.scriptPromise = new Promise((resolve, reject) => {
+          existingScript.addEventListener("load", () => resolve(true), { once: true });
+          existingScript.addEventListener("error", () => reject(new Error("GPT_LOAD_FAILED")), { once: true });
+        }).catch(() => false);
+        return gptState.scriptPromise;
+      }
+
+      gptState.scriptPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.id = "gpt-bootstrap";
+        script.async = true;
+        script.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => reject(new Error("GPT_LOAD_FAILED"));
+        document.head.appendChild(script);
+      }).catch(() => false);
+
+      return gptState.scriptPromise;
+    }
+
+    async function runGoogletagCommand(callback) {
+      const loaded = await maybeLoadGptScript();
+      if (!loaded) {
+        throw new Error("GPT_UNAVAILABLE");
+      }
+
+      return new Promise((resolve, reject) => {
+        window.googletag.cmd.push(() => {
+          try {
+            resolve(callback(window.googletag));
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    }
+
+    async function ensureGoogletagServices() {
+      await runGoogletagCommand((googletag) => {
+        if (gptState.servicesEnabled) {
+          return;
+        }
+
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+        gptState.servicesEnabled = true;
+      });
+    }
+
+    async function destroyGoogletagSlot(slot, listeners = []) {
+      if (!slot) {
+        return;
+      }
+
+      try {
+        await runGoogletagCommand((googletag) => {
+          const pubads = googletag.pubads();
+          listeners.forEach(({ type, handler }) => {
+            pubads.removeEventListener(type, handler);
+          });
+          googletag.destroySlots([slot]);
+        });
+      } catch {
+        return;
+      }
+    }
+
     function setPendingUndo(pendingUndo) {
       state.pendingUndo = pendingUndo;
       updateUndoUi();
@@ -1486,6 +1590,7 @@
         return Promise.resolve(false);
       }
 
+      pauseTimerForAd();
       state.adBusy = true;
       updateHud();
 
@@ -1505,6 +1610,7 @@
           adSecondaryButton.onclick = null;
           adProgressFill.style.width = "0%";
           state.adBusy = false;
+          resumeTimerAfterAd();
           updateHud();
           resolve(completed);
         };
@@ -1575,7 +1681,166 @@
       });
     }
 
+    async function showGoogleRewardedUndoAd() {
+      if (!canUseGoogleRewardedAds()) {
+        return false;
+      }
+
+      if (state.adBusy) {
+        return false;
+      }
+
+      pauseTimerForAd();
+      state.adBusy = true;
+      updateHud();
+
+      return new Promise((resolve) => {
+        let settled = false;
+        let requestStarted = false;
+        let rewardGranted = false;
+        let rewardedSlot = null;
+        let rewardedListeners = [];
+
+        const finish = (granted, statusMessage = "") => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+
+          if (statusMessage) {
+            updateMessage(statusMessage);
+          }
+
+          adOverlay.classList.remove("is-visible");
+          adPrimaryButton.onclick = null;
+          adSecondaryButton.onclick = null;
+          adPrimaryButton.disabled = false;
+          adSecondaryButton.disabled = false;
+          adSecondaryButton.hidden = false;
+          adProgressFill.style.width = "0%";
+          state.adBusy = false;
+          resumeTimerAfterAd();
+          updateHud();
+          void destroyGoogletagSlot(rewardedSlot, rewardedListeners);
+          resolve(granted);
+        };
+
+        const requestRewardedAd = async () => {
+          if (requestStarted) {
+            return;
+          }
+
+          requestStarted = true;
+          adPrimaryButton.disabled = true;
+          adSecondaryButton.disabled = true;
+          adPrimaryButton.textContent = "CHARGEMENT...";
+          adNote.textContent = "Chargement de l'annonce Google...";
+
+          try {
+            await ensureGoogletagServices();
+
+            await runGoogletagCommand((googletag) => {
+              const pubads = googletag.pubads();
+              rewardedSlot = googletag.defineOutOfPageSlot(
+                ADS_CONFIG.adManagerRewardedAdUnitPath,
+                googletag.enums.OutOfPageFormat.REWARDED
+              );
+
+              if (!rewardedSlot) {
+                throw new Error("REWARDED_UNSUPPORTED");
+              }
+
+              rewardedSlot.addService(pubads);
+
+              const onRewardedReady = (event) => {
+                if (event.slot !== rewardedSlot || settled) {
+                  return;
+                }
+
+                adOverlay.classList.remove("is-visible");
+
+                try {
+                  event.makeRewardedVisible();
+                } catch {
+                  finish(false, "La pub Google n'a pas pu s'afficher.");
+                }
+              };
+
+              const onRewardedGranted = (event) => {
+                if (event.slot !== rewardedSlot || settled) {
+                  return;
+                }
+
+                rewardGranted = true;
+              };
+
+              const onRewardedClosed = (event) => {
+                if (event.slot !== rewardedSlot || settled) {
+                  return;
+                }
+
+                finish(
+                  rewardGranted,
+                  rewardGranted ? "" : "Pub fermee avant validation de la recompense."
+                );
+              };
+
+              const onSlotRenderEnded = (event) => {
+                if (event.slot !== rewardedSlot || settled) {
+                  return;
+                }
+
+                if (event.isEmpty) {
+                  finish(false, "Aucune pub Google disponible pour le moment.");
+                }
+              };
+
+              rewardedListeners = [
+                { type: "rewardedSlotReady", handler: onRewardedReady },
+                { type: "rewardedSlotGranted", handler: onRewardedGranted },
+                { type: "rewardedSlotClosed", handler: onRewardedClosed },
+                { type: "slotRenderEnded", handler: onSlotRenderEnded }
+              ];
+
+              rewardedListeners.forEach(({ type, handler }) => {
+                pubads.addEventListener(type, handler);
+              });
+
+              googletag.display(rewardedSlot);
+            });
+          } catch (error) {
+            const reason = error instanceof Error ? error.message : "";
+            const statusMessage = reason === "REWARDED_UNSUPPORTED"
+              ? "Cette page ou cet appareil ne supporte pas la rewarded ad Google."
+              : "Impossible de charger la pub Google pour l'instant.";
+            finish(false, statusMessage);
+          }
+        };
+
+        adTitle.textContent = "ANNULER LA PERTE";
+        adCopy.textContent = `Regarde une pub Google pour recuperer ${formatEuro(getUndoRestoreAmount())}.`;
+        adNote.textContent = "La recompense arrive seulement si Google valide la pub.";
+        adPrimaryButton.textContent = "REGARDER LA PUB";
+        adPrimaryButton.disabled = false;
+        adSecondaryButton.textContent = "ANNULER";
+        adSecondaryButton.disabled = false;
+        adSecondaryButton.hidden = false;
+        adProgressFill.style.width = "0%";
+        adOverlay.classList.add("is-visible");
+
+        adPrimaryButton.onclick = () => {
+          void requestRewardedAd();
+        };
+        adSecondaryButton.onclick = () => finish(false);
+      });
+    }
+
     async function showRewardedUndoAd() {
+      if (canUseGoogleRewardedAds()) {
+        return showGoogleRewardedUndoAd();
+      }
+
       maybeLoadAdsenseScript();
       return runAdBreak({
         title: "ANNULER LA PERTE",
@@ -1817,7 +2082,7 @@
       const time = context.currentTime + 0.01;
       [392, 523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
         playTone(context, {
-          time: time + index * 0.075,
+          time: time + index * 0.0A75,
           frequency,
           endFrequency: frequency * 1.04,
           duration: 0.24,
@@ -2016,6 +2281,36 @@
       }
     }
 
+    function stopTimer() {
+      if (!state.timerId) {
+        return;
+      }
+
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+
+    function pauseTimerForAd() {
+      const shouldPause = state.started && !state.ended && state.timeLeft > 0 && Boolean(state.timerId);
+      state.timerPausedByAd = shouldPause;
+
+      if (shouldPause) {
+        stopTimer();
+      }
+    }
+
+    function resumeTimerAfterAd() {
+      if (!state.timerPausedByAd) {
+        return;
+      }
+
+      state.timerPausedByAd = false;
+
+      if (state.started && !state.ended && state.timeLeft > 0) {
+        startTimer();
+      }
+    }
+
     function startTimer() {
       if (state.timerId) {
         return;
@@ -2023,8 +2318,7 @@
 
       state.timerId = window.setInterval(() => {
         if (state.ended) {
-          clearInterval(state.timerId);
-          state.timerId = null;
+          stopTimer();
           return;
         }
 
@@ -2366,10 +2660,8 @@
       stopSpinAudio();
       stopSpinHaptics();
 
-      if (state.timerId) {
-        clearInterval(state.timerId);
-        state.timerId = null;
-      }
+      stopTimer();
+      state.timerPausedByAd = false;
 
       const achievedStage = state.stageIndex + 1;
       const timedOut = state.timeLeft <= 0;
@@ -2419,12 +2711,10 @@
       state.recentOutcomes = [];
       state.pendingUndo = null;
 
-      if (state.timerId) {
-        clearInterval(state.timerId);
-        state.timerId = null;
-      }
+      stopTimer();
 
       state.adBusy = false;
+      state.timerPausedByAd = false;
       adOverlay.classList.remove("is-visible");
       adProgressFill.style.width = "0%";
       stopSpinAudio();
@@ -2466,6 +2756,7 @@
     });
 
     maybeLoadAdsenseScript();
+    void maybeLoadGptScript();
     resolveSymbolsAsset().finally(() => {
       renderStillReels();
       updateHud();
