@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <script
-    id="adsense-bootstrap"
-    async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1377111970575860"
-    crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>🎰Slot Casino</title>
@@ -535,49 +530,6 @@
       min-width: 0;
     }
 
-    .assist-row {
-      display: grid;
-      gap: 8px;
-    }
-
-    .secondary-button,
-    .ghost-button {
-      min-height: 52px;
-      border-radius: 20px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      transition: transform 120ms ease, opacity 120ms ease;
-    }
-
-    .secondary-button {
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(17, 17, 17, 0.08);
-      box-shadow: var(--soft-shadow);
-    }
-
-    .ghost-button {
-      background: rgba(255, 255, 255, 0.42);
-      border: 1px solid rgba(17, 17, 17, 0.06);
-    }
-
-    .secondary-button:active,
-    .ghost-button:active {
-      transform: scale(0.985);
-    }
-
-    .secondary-button:disabled,
-    .ghost-button:disabled {
-      opacity: 0.38;
-      cursor: default;
-    }
-
-    .undo-copy {
-      text-align: center;
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.35;
-    }
-
     .spin-button {
       min-height: 64px;
       border-radius: 24px;
@@ -648,40 +600,6 @@
       line-height: 1.5;
       text-align: center;
       color: var(--muted);
-    }
-
-    .ad-progress {
-      position: relative;
-      z-index: 1;
-      height: 10px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(17, 17, 17, 0.08);
-    }
-
-    .ad-progress-fill {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 0;
-      border-radius: inherit;
-      background: linear-gradient(90deg, rgba(17, 17, 17, 0.94), rgba(120, 120, 120, 0.88));
-      transition: width 120ms linear;
-    }
-
-    .ad-actions {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      gap: 10px;
-    }
-
-    .ad-note {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      font-size: 0.76rem;
-      color: var(--muted);
-      line-height: 1.4;
     }
 
     .overlay-stats {
@@ -879,11 +797,6 @@
         min-height: 56px;
       }
 
-      .secondary-button,
-      .ghost-button {
-        min-height: 48px;
-      }
-
       .mini-info {
         min-width: 98px;
       }
@@ -927,10 +840,6 @@
         min-height: 52px;
       }
 
-      .secondary-button,
-      .ghost-button {
-        min-height: 44px;
-      }
     }
 
     @media (min-width: 820px) {
@@ -1186,11 +1095,6 @@
           <div class="chance-value" id="bankValue">10 &euro;</div>
         </div>
       </div>
-
-      <div class="assist-row" id="undoRow" hidden>
-        <button class="secondary-button" id="undoAdButton" type="button">ANNULER LA PERTE</button>
-        <div class="undo-copy" id="undoCopy">Regarder une pub pour restaurer le dernier solde.</div>
-      </div>
     </section>
 
     <div class="overlay" id="overlay">
@@ -1215,23 +1119,7 @@
             <strong id="finalSpins">0</strong>
           </div>
         </div>
-        <button class="secondary-button" id="overlayUndoButton" type="button" hidden>ANNULER LA DERNIERE PERTE</button>
         <button class="restart-button" id="restartButton" type="button">REJOUER</button>
-      </div>
-    </div>
-
-    <div class="overlay" id="adOverlay">
-      <div class="overlay-card glass">
-        <div class="overlay-title" id="adTitle">PUB</div>
-        <div class="overlay-copy" id="adCopy">Une courte annonce va se lancer.</div>
-        <div class="ad-progress" aria-hidden="true">
-          <div class="ad-progress-fill" id="adProgressFill"></div>
-        </div>
-        <div class="ad-note" id="adNote">Connexion au provider pub...</div>
-        <div class="ad-actions">
-          <button class="restart-button" id="adPrimaryButton" type="button">REGARDER</button>
-          <button class="ghost-button" id="adSecondaryButton" type="button">PLUS TARD</button>
-        </div>
       </div>
     </div>
   </main>
@@ -1239,21 +1127,6 @@
   <script>
     const DEFAULT_TIME = 60;
     const BEST_STAGE_STORAGE_KEY = "slot-liquid-glass-best-stage";
-    const AD_STATE_STORAGE_KEY = "slot-liquid-glass-ad-state";
-    const ADS_CONFIG = {
-      adsenseClient: "ca-pub-1377111970575860",
-      adManagerRewardedAdUnitPath: "",
-      validStageThreshold: 5,
-      validRunsPerInterstitial: 3,
-      mockAdDurationMs: 3600
-    };
-
-    window.googletag = window.googletag || { cmd: [] };
-
-    const gptState = {
-      scriptPromise: null,
-      servicesEnabled: false
-    };
 
     const SYMBOLS = [
       { id: "grapes", name: "Raisins", row: 0, col: 0, payout: 3, weight: 16, category: "standard", shiftX: "4.5%", shiftY: "-1%", scale: 1.03 },
@@ -1274,15 +1147,7 @@
     const overlay = document.getElementById("overlay");
     const overlayTitle = document.getElementById("overlayTitle");
     const overlayCopy = document.getElementById("overlayCopy");
-    const overlayUndoButton = document.getElementById("overlayUndoButton");
     const restartButton = document.getElementById("restartButton");
-    const adOverlay = document.getElementById("adOverlay");
-    const adTitle = document.getElementById("adTitle");
-    const adCopy = document.getElementById("adCopy");
-    const adProgressFill = document.getElementById("adProgressFill");
-    const adNote = document.getElementById("adNote");
-    const adPrimaryButton = document.getElementById("adPrimaryButton");
-    const adSecondaryButton = document.getElementById("adSecondaryButton");
     const reels = [...document.querySelectorAll(".reel")];
     const reelTracks = reels.map((reel) => reel.querySelector(".reel-track"));
     const touchMedia = window.matchMedia("(pointer: coarse)");
@@ -1307,9 +1172,6 @@
     const sliderHint = document.getElementById("sliderHint");
     const sliderMax = document.getElementById("sliderMax");
     const bankValue = document.getElementById("bankValue");
-    const undoRow = document.getElementById("undoRow");
-    const undoAdButton = document.getElementById("undoAdButton");
-    const undoCopy = document.getElementById("undoCopy");
     const finalBank = document.getElementById("finalBank");
     const finalStage = document.getElementById("finalStage");
     const finalRecord = document.getElementById("finalRecord");
@@ -1332,25 +1194,6 @@
       }
     }
 
-    function loadAdState() {
-      try {
-        const parsed = JSON.parse(window.localStorage.getItem(AD_STATE_STORAGE_KEY) || "{}");
-        return {
-          validRunsTowardInterstitial: Math.max(0, Math.floor(parsed.validRunsTowardInterstitial || 0))
-        };
-      } catch {
-        return { validRunsTowardInterstitial: 0 };
-      }
-    }
-
-    function saveAdState(adState) {
-      try {
-        window.localStorage.setItem(AD_STATE_STORAGE_KEY, JSON.stringify(adState));
-      } catch {
-        return;
-      }
-    }
-
     const state = {
       bank: 10,
       selectedBet: 2,
@@ -1366,11 +1209,7 @@
       peakBank: 10,
       currentSymbols: ["grapes", "lemon", "cherries"],
       recentOutcomes: [],
-      bestStage: loadBestStage(),
-      adState: loadAdState(),
-      pendingUndo: null,
-      adBusy: false,
-      timerPausedByAd: false
+      bestStage: loadBestStage()
     };
 
     function formatEuro(value) {
@@ -1431,482 +1270,38 @@
       message.textContent = text;
     }
 
-    function maybeLoadAdsenseScript() {
-      if (!ADS_CONFIG.adsenseClient || document.getElementById("adsense-bootstrap")) {
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.id = "adsense-bootstrap";
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(ADS_CONFIG.adsenseClient)}`;
-      document.head.appendChild(script);
-    }
-
-    function canUseGoogleRewardedAds() {
-      return Boolean(ADS_CONFIG.adManagerRewardedAdUnitPath);
-    }
-
-    function maybeLoadGptScript() {
-      if (!canUseGoogleRewardedAds()) {
-        return Promise.resolve(false);
-      }
-
-      if (window.googletag?.apiReady) {
-        return Promise.resolve(true);
-      }
-
-      if (gptState.scriptPromise) {
-        return gptState.scriptPromise;
-      }
-
-      const existingScript = document.getElementById("gpt-bootstrap");
-      if (existingScript) {
-        gptState.scriptPromise = new Promise((resolve, reject) => {
-          existingScript.addEventListener("load", () => resolve(true), { once: true });
-          existingScript.addEventListener("error", () => reject(new Error("GPT_LOAD_FAILED")), { once: true });
-        }).catch(() => false);
-        return gptState.scriptPromise;
-      }
-
-      gptState.scriptPromise = new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.id = "gpt-bootstrap";
-        script.async = true;
-        script.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
-        script.onload = () => resolve(true);
-        script.onerror = () => reject(new Error("GPT_LOAD_FAILED"));
-        document.head.appendChild(script);
-      }).catch(() => false);
-
-      return gptState.scriptPromise;
-    }
-
-    async function runGoogletagCommand(callback) {
-      const loaded = await maybeLoadGptScript();
-      if (!loaded) {
-        throw new Error("GPT_UNAVAILABLE");
-      }
-
-      return new Promise((resolve, reject) => {
-        window.googletag.cmd.push(() => {
-          try {
-            resolve(callback(window.googletag));
-          } catch (error) {
-            reject(error);
-          }
-        });
-      });
-    }
-
-    async function ensureGoogletagServices() {
-      await runGoogletagCommand((googletag) => {
-        if (gptState.servicesEnabled) {
-          return;
-        }
-
-        googletag.pubads().enableSingleRequest();
-        googletag.enableServices();
-        gptState.servicesEnabled = true;
-      });
-    }
-
-    async function destroyGoogletagSlot(slot, listeners = []) {
-      if (!slot) {
-        return;
-      }
-
-      try {
-        await runGoogletagCommand((googletag) => {
-          const pubads = googletag.pubads();
-          listeners.forEach(({ type, handler }) => {
-            pubads.removeEventListener(type, handler);
-          });
-          googletag.destroySlots([slot]);
-        });
-      } catch {
-        return;
-      }
-    }
-
-    function setPendingUndo(pendingUndo) {
-      state.pendingUndo = pendingUndo;
-      updateUndoUi();
-    }
-
-    function getUndoRestoreAmount() {
-      if (!state.pendingUndo) {
-        return 0;
-      }
-
-      return Math.max(0, Math.round(state.pendingUndo.restoreBank - state.bank));
-    }
-
-    function updateUndoUi() {
-      const hasPendingUndo = Boolean(state.pendingUndo);
-      const restoreAmount = getUndoRestoreAmount();
-      const restoreText = hasPendingUndo
-        ? `Regarder une pub pour recuperer ${formatEuro(restoreAmount)} et revenir a ${formatEuro(state.pendingUndo.restoreBank)}.`
-        : "Regarder une pub pour restaurer le dernier solde.";
-      const canUndoInRun = hasPendingUndo && !state.spinning && !state.ended && !state.adBusy;
-      const canUndoFromOverlay = hasPendingUndo && state.ended && state.timeLeft > 0 && !state.adBusy;
-
-      undoCopy.textContent = restoreText;
-      undoRow.hidden = !hasPendingUndo || state.ended;
-      undoAdButton.disabled = !canUndoInRun;
-
-      overlayUndoButton.hidden = !canUndoFromOverlay;
-      overlayUndoButton.disabled = !canUndoFromOverlay;
-    }
-
-    function markRunForInterstitial(achievedStage) {
-      if (achievedStage < ADS_CONFIG.validStageThreshold) {
-        return false;
-      }
-
-      state.adState.validRunsTowardInterstitial += 1;
-      const shouldShow = state.adState.validRunsTowardInterstitial >= ADS_CONFIG.validRunsPerInterstitial;
-
-      if (shouldShow) {
-        state.adState.validRunsTowardInterstitial = 0;
-      }
-
-      saveAdState(state.adState);
-      return shouldShow;
-    }
-
-    function runAdBreak({
-      title,
-      copy,
-      note,
-      durationMs = ADS_CONFIG.mockAdDurationMs,
-      actionLabel = "REGARDER",
-      cancelLabel = "PLUS TARD",
-      autoStart = false,
-      cancellable = true
-    }) {
-      if (state.adBusy) {
-        return Promise.resolve(false);
-      }
-
-      pauseTimerForAd();
-      state.adBusy = true;
-      updateHud();
-
-      return new Promise((resolve) => {
-        let rafId = 0;
-        let startAt = 0;
-        let started = false;
-
-        const cleanup = (completed) => {
-          if (rafId) {
-            cancelAnimationFrame(rafId);
-            rafId = 0;
-          }
-
-          adOverlay.classList.remove("is-visible");
-          adPrimaryButton.onclick = null;
-          adSecondaryButton.onclick = null;
-          adProgressFill.style.width = "0%";
-          state.adBusy = false;
-          resumeTimerAfterAd();
-          updateHud();
-          resolve(completed);
-        };
-
-        const tick = (now) => {
-          if (!started) {
-            return;
-          }
-
-          const progress = Math.min(1, (now - startAt) / durationMs);
-          adProgressFill.style.width = `${progress * 100}%`;
-          adNote.textContent = progress >= 1
-            ? "Annonce terminee."
-            : `Annonce en cours... ${Math.max(1, Math.ceil((durationMs - (now - startAt)) / 1000))}s`;
-
-          if (progress >= 1) {
-            cleanup(true);
-            return;
-          }
-
-          rafId = requestAnimationFrame(tick);
-        };
-
-        const startPlayback = () => {
-          if (started) {
-            return;
-          }
-
-          started = true;
-          adPrimaryButton.disabled = true;
-          adSecondaryButton.disabled = true;
-          adPrimaryButton.textContent = "PUB EN COURS";
-          startAt = performance.now();
-          adNote.textContent = note;
-          rafId = requestAnimationFrame(tick);
-        };
-
-        adTitle.textContent = title;
-        adCopy.textContent = copy;
-        adNote.textContent = note;
-        adPrimaryButton.textContent = actionLabel;
-        adPrimaryButton.disabled = false;
-        adSecondaryButton.textContent = cancelLabel;
-        adSecondaryButton.disabled = false;
-        adSecondaryButton.hidden = !cancellable && autoStart;
-        adProgressFill.style.width = "0%";
-        adOverlay.classList.add("is-visible");
-
-        adPrimaryButton.onclick = startPlayback;
-        adSecondaryButton.onclick = () => cleanup(false);
-
-        if (autoStart) {
-          startPlayback();
-        }
-      });
-    }
-
-    async function showInterstitialAdBreak() {
-      maybeLoadAdsenseScript();
-      return runAdBreak({
-        title: "PUB",
-        copy: "Pause pub apres 3 parties valables. Merci de soutenir le jeu.",
-        note: "Annonce en cours...",
-        actionLabel: "OK",
-        cancelLabel: "FERMER",
-        autoStart: true,
-        cancellable: false
-      });
-    }
-
-    async function showGoogleRewardedUndoAd() {
-      if (!canUseGoogleRewardedAds()) {
-        return false;
-      }
-
-      if (state.adBusy) {
-        return false;
-      }
-
-      pauseTimerForAd();
-      state.adBusy = true;
-      updateHud();
-
-      return new Promise((resolve) => {
-        let settled = false;
-        let requestStarted = false;
-        let rewardGranted = false;
-        let rewardedSlot = null;
-        let rewardedListeners = [];
-
-        const finish = (granted, statusMessage = "") => {
-          if (settled) {
-            return;
-          }
-
-          settled = true;
-
-          if (statusMessage) {
-            updateMessage(statusMessage);
-          }
-
-          adOverlay.classList.remove("is-visible");
-          adPrimaryButton.onclick = null;
-          adSecondaryButton.onclick = null;
-          adPrimaryButton.disabled = false;
-          adSecondaryButton.disabled = false;
-          adSecondaryButton.hidden = false;
-          adProgressFill.style.width = "0%";
-          state.adBusy = false;
-          resumeTimerAfterAd();
-          updateHud();
-          void destroyGoogletagSlot(rewardedSlot, rewardedListeners);
-          resolve(granted);
-        };
-
-        const requestRewardedAd = async () => {
-          if (requestStarted) {
-            return;
-          }
-
-          requestStarted = true;
-          adPrimaryButton.disabled = true;
-          adSecondaryButton.disabled = true;
-          adPrimaryButton.textContent = "CHARGEMENT...";
-          adNote.textContent = "Chargement de l'annonce Google...";
-
-          try {
-            await ensureGoogletagServices();
-
-            await runGoogletagCommand((googletag) => {
-              const pubads = googletag.pubads();
-              rewardedSlot = googletag.defineOutOfPageSlot(
-                ADS_CONFIG.adManagerRewardedAdUnitPath,
-                googletag.enums.OutOfPageFormat.REWARDED
-              );
-
-              if (!rewardedSlot) {
-                throw new Error("REWARDED_UNSUPPORTED");
-              }
-
-              rewardedSlot.addService(pubads);
-
-              const onRewardedReady = (event) => {
-                if (event.slot !== rewardedSlot || settled) {
-                  return;
-                }
-
-                adOverlay.classList.remove("is-visible");
-
-                try {
-                  event.makeRewardedVisible();
-                } catch {
-                  finish(false, "La pub Google n'a pas pu s'afficher.");
-                }
-              };
-
-              const onRewardedGranted = (event) => {
-                if (event.slot !== rewardedSlot || settled) {
-                  return;
-                }
-
-                rewardGranted = true;
-              };
-
-              const onRewardedClosed = (event) => {
-                if (event.slot !== rewardedSlot || settled) {
-                  return;
-                }
-
-                finish(
-                  rewardGranted,
-                  rewardGranted ? "" : "Pub fermee avant validation de la recompense."
-                );
-              };
-
-              const onSlotRenderEnded = (event) => {
-                if (event.slot !== rewardedSlot || settled) {
-                  return;
-                }
-
-                if (event.isEmpty) {
-                  finish(false, "Aucune pub Google disponible pour le moment.");
-                }
-              };
-
-              rewardedListeners = [
-                { type: "rewardedSlotReady", handler: onRewardedReady },
-                { type: "rewardedSlotGranted", handler: onRewardedGranted },
-                { type: "rewardedSlotClosed", handler: onRewardedClosed },
-                { type: "slotRenderEnded", handler: onSlotRenderEnded }
-              ];
-
-              rewardedListeners.forEach(({ type, handler }) => {
-                pubads.addEventListener(type, handler);
-              });
-
-              googletag.display(rewardedSlot);
-            });
-          } catch (error) {
-            const reason = error instanceof Error ? error.message : "";
-            const statusMessage = reason === "REWARDED_UNSUPPORTED"
-              ? "Cette page ou cet appareil ne supporte pas la rewarded ad Google."
-              : "Impossible de charger la pub Google pour l'instant.";
-            finish(false, statusMessage);
-          }
-        };
-
-        adTitle.textContent = "ANNULER LA PERTE";
-        adCopy.textContent = `Regarde une pub Google pour recuperer ${formatEuro(getUndoRestoreAmount())}.`;
-        adNote.textContent = "La recompense arrive seulement si Google valide la pub.";
-        adPrimaryButton.textContent = "REGARDER LA PUB";
-        adPrimaryButton.disabled = false;
-        adSecondaryButton.textContent = "ANNULER";
-        adSecondaryButton.disabled = false;
-        adSecondaryButton.hidden = false;
-        adProgressFill.style.width = "0%";
-        adOverlay.classList.add("is-visible");
-
-        adPrimaryButton.onclick = () => {
-          void requestRewardedAd();
-        };
-        adSecondaryButton.onclick = () => finish(false);
-      });
-    }
-
-    async function showRewardedUndoAd() {
-      if (canUseGoogleRewardedAds()) {
-        return showGoogleRewardedUndoAd();
-      }
-
-      maybeLoadAdsenseScript();
-      return runAdBreak({
-        title: "ANNULER LA PERTE",
-        copy: `Regarde une courte pub pour recuperer ${formatEuro(getUndoRestoreAmount())}.`,
-        note: "Annonce recompensee en cours...",
-        actionLabel: "REGARDER LA PUB",
-        cancelLabel: "ANNULER",
-        autoStart: false,
-        cancellable: true
-      });
-    }
-
-    async function redeemUndoAdReward() {
-      if (!state.pendingUndo || state.spinning || state.adBusy) {
-        return;
-      }
-
-      const completed = await showRewardedUndoAd();
-      if (!completed || !state.pendingUndo) {
-        updateUndoUi();
-        return;
-      }
-
-      const restoredBank = state.pendingUndo.restoreBank;
-      const restoredAmount = Math.max(0, Math.round(restoredBank - state.bank));
-      const canResumeRun = state.ended && state.timeLeft > 0;
-
-      state.bank = restoredBank;
-      syncPeakBank();
-      setPendingUndo(null);
-
-      if (canResumeRun) {
-        state.ended = false;
-        overlay.classList.remove("is-visible");
-        if (state.started && state.timeLeft > 0) {
-          startTimer();
-        }
-      }
-
-      machine.classList.add("is-winning");
-      showBurst(`+${formatEuro(restoredAmount)}`);
-      updateMessage(`Perte annulee. Tu recuperes ${formatEuro(restoredAmount)}.`);
-      vibrate([16, 24, 16]);
-      void playTripleWinSound();
-      ensureBetIsValid();
-      updateHud();
-    }
-
     function isTouchHapticsDevice() {
       return touchMedia.matches || navigator.maxTouchPoints > 0;
     }
 
-    function vibrate(pattern) {
-      if (navigator.vibrate && isTouchHapticsDevice()) {
-        navigator.vibrate(pattern);
+    function canUseHaptics() {
+      return typeof navigator.vibrate === "function"
+        && isTouchHapticsDevice()
+        && document.visibilityState === "visible";
+    }
+
+    function runHaptic(pattern) {
+      if (!canUseHaptics()) {
+        return false;
       }
+
+      try {
+        return navigator.vibrate(pattern);
+      } catch {
+        return false;
+      }
+    }
+
+    function vibrate(pattern) {
+      return runHaptic(pattern);
     }
 
     function stopSpinHaptics() {
-      if (navigator.vibrate && isTouchHapticsDevice()) {
-        navigator.vibrate(0);
-      }
+      runHaptic(0);
     }
 
-    function pulseHaptic(duration, minGap = 36) {
-      if (!(navigator.vibrate && isTouchHapticsDevice())) {
+    function pulseHaptic(pattern, minGap = 72) {
+      if (!canUseHaptics()) {
         return;
       }
 
@@ -1916,12 +1311,16 @@
       }
 
       lastHapticTime = now;
-      navigator.vibrate(duration);
+      runHaptic(pattern);
     }
 
     function startSpinHaptics() {
       lastHapticTime = 0;
-      pulseHaptic(16, 0);
+      pulseHaptic([18], 0);
+    }
+
+    function primeHapticsFromGesture() {
+      pulseHaptic([12], 120);
     }
 
     async function ensureAudioContext() {
@@ -2082,7 +1481,7 @@
       const time = context.currentTime + 0.01;
       [392, 523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
         playTone(context, {
-          time: time + index * 0.0A75,
+          time: time + index * 0.075,
           frequency,
           endFrequency: frequency * 1.04,
           duration: 0.24,
@@ -2269,9 +1668,8 @@
       sliderHint.textContent = `5 derniers ${wins}/${state.recentOutcomes.length || 0}`;
       bankValue.textContent = formatEuro(state.bank);
 
-      spinButton.disabled = state.spinning || state.ended || state.bank < 1 || state.timeLeft <= 0 || state.adBusy;
-      betSlider.disabled = state.spinning || state.ended || state.adBusy;
-      updateUndoUi();
+      spinButton.disabled = state.spinning || state.ended || state.bank < 1 || state.timeLeft <= 0;
+      betSlider.disabled = state.spinning || state.ended;
     }
 
     function pushRecentOutcome(isWin) {
@@ -2288,27 +1686,6 @@
 
       clearInterval(state.timerId);
       state.timerId = null;
-    }
-
-    function pauseTimerForAd() {
-      const shouldPause = state.started && !state.ended && state.timeLeft > 0 && Boolean(state.timerId);
-      state.timerPausedByAd = shouldPause;
-
-      if (shouldPause) {
-        stopTimer();
-      }
-    }
-
-    function resumeTimerAfterAd() {
-      if (!state.timerPausedByAd) {
-        return;
-      }
-
-      state.timerPausedByAd = false;
-
-      if (state.started && !state.ended && state.timeLeft > 0) {
-        startTimer();
-      }
     }
 
     function startTimer() {
@@ -2478,7 +1855,7 @@
             track.style.transition = "none";
             track.style.willChange = "auto";
             playReelStopClack(index);
-            pulseHaptic(14, 0);
+            pulseHaptic([22, 14, 18], 0);
             resolve();
           };
 
@@ -2503,7 +1880,7 @@
               for (let currentStep = lastStep + 1; currentStep <= step; currentStep += 1) {
                 if (currentStep < settleIndex) {
                   playSpinTick(index, currentStep);
-                  pulseHaptic(8, 42);
+                  pulseHaptic([16], 72);
                 }
               }
               lastStep = step;
@@ -2548,12 +1925,12 @@
         machine.classList.add("is-winning");
         showBurst(`PALIER ${state.stageIndex + 1}`);
         updateMessage(`Nouveau palier. Le timer repart a ${formatTime(DEFAULT_TIME)}.`);
-        vibrate([40, 40, 80]);
+        vibrate([26, 22, 30, 22, 52]);
       }
     }
 
     async function triggerSpin() {
-      if (state.spinning || state.ended || state.adBusy) {
+      if (state.spinning || state.ended) {
         return;
       }
 
@@ -2568,10 +1945,8 @@
         startTimer();
       }
 
-      const bankBeforeSpin = state.bank;
       const spinBet = state.selectedBet;
       const spinLuck = getLuckParts(state.bank, spinBet).total;
-      setPendingUndo(null);
       state.spinning = true;
       state.currentSpinBet = spinBet;
       state.spinCount += 1;
@@ -2597,12 +1972,11 @@
       if (result.type === "win") {
         state.bank += result.amount;
         syncPeakBank();
-        setPendingUndo(null);
         machine.classList.add("is-winning");
         showBurst(result.burst);
         pushRecentOutcome(true);
         updateMessage(result.message);
-        vibrate([20, 30, 60]);
+        vibrate([22, 26, 42]);
         if (result.symbol.id === "diamond") {
           void playDiamondJackpotSound();
         } else {
@@ -2612,23 +1986,13 @@
         const beforeHalf = state.bank;
         state.bank = Math.floor(state.bank / 2);
         const loss = beforeHalf - state.bank;
-        setPendingUndo({
-          kind: "halve",
-          restoreBank: bankBeforeSpin,
-          afterBank: state.bank
-        });
         machine.classList.add("is-winning");
         showBurst(`-${formatEuro(loss)}`);
         pushRecentOutcome(false);
         updateMessage(`Triple dynamite. Ton solde passe de ${formatEuro(beforeHalf)} a ${formatEuro(state.bank)}.`);
-        vibrate([40, 40, 60]);
+        vibrate([34, 24, 44]);
         void playDynamiteLoseSound();
       } else {
-        setPendingUndo({
-          kind: "miss",
-          restoreBank: bankBeforeSpin,
-          afterBank: state.bank
-        });
         pushRecentOutcome(false);
         updateMessage(result.message);
       }
@@ -2661,12 +2025,10 @@
       stopSpinHaptics();
 
       stopTimer();
-      state.timerPausedByAd = false;
 
       const achievedStage = state.stageIndex + 1;
       const timedOut = state.timeLeft <= 0;
       const hasNewRecord = setBestStage(achievedStage);
-      const shouldShowInterstitial = markRunForInterstitial(achievedStage);
 
       updateHud();
 
@@ -2687,12 +2049,6 @@
       overlay.classList.add("is-visible");
       updateMessage("Rejoue avec une mise plus agressive si tu veux forcer la chance vers x10.");
       spinButton.disabled = true;
-
-      if (shouldShowInterstitial) {
-        window.setTimeout(() => {
-          void showInterstitialAdBreak();
-        }, 180);
-      }
     }
 
     function resetGame() {
@@ -2709,14 +2065,8 @@
       state.peakBank = 10;
       state.currentSymbols = ["grapes", "lemon", "cherries"];
       state.recentOutcomes = [];
-      state.pendingUndo = null;
 
       stopTimer();
-
-      state.adBusy = false;
-      state.timerPausedByAd = false;
-      adOverlay.classList.remove("is-visible");
-      adProgressFill.style.width = "0%";
       stopSpinAudio();
       stopSpinHaptics();
       overlay.classList.remove("is-visible");
@@ -2735,18 +2085,15 @@
       updateHud();
     });
 
+    spinButton.addEventListener("pointerdown", primeHapticsFromGesture);
+    machine.addEventListener("pointerdown", primeHapticsFromGesture);
     spinButton.addEventListener("click", triggerSpin);
     machine.addEventListener("click", triggerSpin);
-    undoAdButton.addEventListener("click", redeemUndoAdReward);
-    overlayUndoButton.addEventListener("click", redeemUndoAdReward);
     restartButton.addEventListener("click", resetGame);
 
     window.addEventListener("keydown", (event) => {
       if (event.code === "Space" || event.code === "Enter") {
         event.preventDefault();
-        if (adOverlay.classList.contains("is-visible")) {
-          return;
-        }
         if (overlay.classList.contains("is-visible")) {
           resetGame();
           return;
@@ -2755,8 +2102,6 @@
       }
     });
 
-    maybeLoadAdsenseScript();
-    void maybeLoadGptScript();
     resolveSymbolsAsset().finally(() => {
       renderStillReels();
       updateHud();
